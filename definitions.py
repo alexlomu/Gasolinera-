@@ -5,18 +5,21 @@ import queue
 from clases import Car, FuelPump, PaymentQueue
 
 # Función que simula el proceso de llenado del tanque
-def fueling(car, fuel_pump):
-    car = Car()
-    FuelPump.semaphore.acquire()
+def fueling():
+    car = Car(1)
+    fuel_pump = FuelPump(1)
+    fuel_pump.semaphore.acquire()
     car.fueling_start_time = time.time()
     print(f"Car {car.id} starts fueling at {car.fueling_start_time:.2f}")
     time.sleep(random.uniform(5, 10))
     car.fueling_end_time = time.time()
     print(f"Car {car.id} ends fueling at {car.fueling_end_time:.2f}")
-    FuelPump.semaphore.release()
+    fuel_pump.semaphore.release()
+
 
 # Función que simula el proceso de pago
 def payment(car):
+    car = Car()
     PaymentQueue.add_to_queue(car)
     while car.payment_start_time == 0:
         if PaymentQueue.queue[0] == car:
@@ -28,12 +31,13 @@ def payment(car):
             PaymentQueue.remove_from_queue()
 
 # Función que simula la llegada de los coches
-def car_arrival(car_queue, fuel_pump, payment_queue):
+def car_arrival(cars, fuel_pump, payment_queue):
     car_id = 1
     while True:
         car = Car(car_id)
         car_id += 1
-        car_queue.put(car)
+        cars = []
+        cars += car
         time.sleep(random.uniform(0, 15))
 
         # Entra en la gasolinera y comienza a repostar
@@ -55,6 +59,8 @@ def calculate_average_time(cars):
 def simulation_one_pump():
     fuel_pump = FuelPump(1)
     payment_queue = PaymentQueue()
-    car_queue = queue.Queue()
+    cars = queue.Queue()
 
-    threading.Thread(target=car_arrival, args=(car_queue, fuel))
+    threading.Thread(target=car_arrival, args=(cars, fuel_pump, payment_queue))
+
+fueling()
